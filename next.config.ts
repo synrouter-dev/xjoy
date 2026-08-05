@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  // Docker-friendly standalone output
+  output: "standalone",
   // Keep pg out of the server bundle (native module)
   serverExternalPackages: ["pg"],
 };
