@@ -1,40 +1,53 @@
-import { ScreenHeader } from "@/components/ScreenHeader";
-import { PlaceholderCard } from "@/components/PlaceholderCard";
+/**
+ * Reader landing page.
+ *
+ * Redirects to the user's last read position (from localStorage) or Genesis 1.
+ * Since localStorage is client-only, we render a client component that reads
+ * the persisted position and performs the redirect.
+ */
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ReaderPage() {
-  return (
-    <div>
-      <ScreenHeader
-        title="Reader"
-        description="Read the King James Bible — book by book, chapter by chapter."
-      />
+  const router = useRouter();
+  const [error, setError] = useState(false);
 
-      <div className="space-y-4">
-        <PlaceholderCard
-          title="Coming Soon"
-          body="The KJV text reader is being prepared. You will be able to browse all 66 books, navigate by chapter and verse, and bookmark passages for later reflection."
-        />
+  useEffect(() => {
+    let target = "/reader/Genesis/1";
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            "Genesis",
-            "Psalms",
-            "Isaiah",
-            "Matthew",
-            "John",
-            "Romans",
-            "Acts",
-            "Revelation",
-          ].map((book) => (
-            <div
-              key={book}
-              className="px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-800 text-center text-sm text-neutral-500 dark:text-neutral-500"
-            >
-              {book}
-            </div>
-          ))}
-        </div>
+    try {
+      const raw = localStorage.getItem("xjoy-reading-position");
+      if (raw) {
+        const pos = JSON.parse(raw);
+        if (pos?.book && typeof pos.chapter === "number") {
+          target = `/reader/${encodeURIComponent(pos.book)}/${pos.chapter}`;
+        }
+      }
+    } catch {
+      // corrupted storage — use default
+    }
+
+    router.replace(target);
+  }, [router]);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <p className="text-neutral-500 dark:text-neutral-500">
+          Unable to load reader. Please try again.
+        </p>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+      <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-500">
+        Opening Scripture…
+      </p>
     </div>
   );
 }
