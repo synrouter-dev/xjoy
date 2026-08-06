@@ -6,6 +6,8 @@ primary_region = "iad"
 
 [env]
   NODE_ENV = "production"
+  # DATABASE_URL, ANTHROPIC_API_KEY, etc. are set via `fly secrets set`
+  # Do NOT put secrets here — they would be visible in the repository.
 
 [http_service]
   internal_port = 3000
@@ -17,10 +19,27 @@ primary_region = "iad"
   [[http_service.checks]]
     interval = "30s"
     timeout = "5s"
+    grace_period = "10s"
     method = "GET"
-    path = "/"
+    path = "/api/health"
 
+# ── Compute ──────────────────────────────────────────────────────────────────
+# 1GB RAM recommended for pg + pgvector operations.
+# shared-cpu-1x is sufficient for the MVP user base (< 100 users).
 [[vm]]
   cpu_kind = "shared-cpu-1x"
   cpus = 1
-  memory_mb = 512
+  memory_mb = 1024
+
+# ── Custom Domain ────────────────────────────────────────────────────────────
+# After deploying, configure custom domain with:
+#   fly certs create <your-domain.com>
+# Then add DNS records at your domain provider:
+#   A     @    → <fly-ipv4>
+#   AAAA  @    → <fly-ipv6>
+#   CNAME www  → xjoy.fly.dev
+
+# ── Metrics ──────────────────────────────────────────────────────────────────
+[metrics]
+  port = 9091
+  path = "/metrics"

@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/reader", label: "Reader" },
   { href: "/chat", label: "Chat" },
   { href: "/search", label: "Search" },
+  { href: "/feedback", label: "Feedback" },
 ] as const;
 
 function SunIcon() {
@@ -64,7 +65,10 @@ export function Navigation() {
           {/* Nav links */}
           <nav className="flex flex-col gap-1" aria-label="Main navigation">
             {NAV_ITEMS.map(({ href, label }) => {
-              const active = pathname === href;
+              const active =
+                href === "/"
+                  ? pathname === href
+                  : pathname.startsWith(href);
               return (
                 <Link
                   key={href}
@@ -106,7 +110,10 @@ export function Navigation() {
       >
         <div className="flex items-center justify-around h-14 px-2">
           {NAV_ITEMS.map(({ href, label }) => {
-            const active = pathname === href;
+            const active =
+              href === "/"
+                ? pathname === href
+                : pathname.startsWith(href);
             return (
               <Link
                 key={href}
