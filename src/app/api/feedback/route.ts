@@ -12,9 +12,11 @@
  *   { success: true, id: number }
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   insertFeedback,
+  getFeedback,
+  getFeedbackSummary,
 } from "@/lib/feedback-db";
 import {
   FEEDBACK_CATEGORIES,
@@ -159,5 +161,59 @@ export async function POST(request: Request) {
     }
 
     return errorResponse("Failed to save feedback. Please try again.", 500);
+  }
+}
+
+// ── GET Handler ─────────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/feedback — list submitted feedback
+ * GET /api/feedback?category=bug — filter by category
+ * GET /api/feedback?summary=true — get aggregated statistics
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+
+    // Summary mode: return aggregated stats
+    if (searchParams.get("summary") === "true") {
+      const summary = await getFeedbackSummary();
+      return NextResponse.json({ summary });
+    }
+
+    // List mode: return feedback entries
+    const category = searchParams.get("category");
+    const limit = parseInt(searchParams.get("limit") || "100", 10);
+
+    // Validate category filter
+    if (category && !FEEDBACK_CATEGORIES.includes(category as FeedbackCategory)) {
+      return errorResponse(
+        `'category' must be one of: ${FEEDBACK_CATEGORIES.join(", ")}`,
+        400
+      );
+    }
+
+    const feedback = await getFeedback(
+      category as FeedbackCategory | undefined,
+      Math.min(limit, 500)
+    );
+
+    return NextResponse.json({ feedback, total: feedback.length });
+  } catch (err) {
+    console.error("Feedback GET error:", err);
+
+    if (
+      err instanceof Error &&
+      (err.message.includes("DATABASE_URL") ||
+        err.message.includes("connect") ||
+        err.message.includes("ECONNREFUSED"))
+    ) {
+      return errorResponse(
+        "Database is not available. Feedback cannot be retrieved at this time.",
+        503
+      );
+    }
+
+    return errorResponse("Failed to retrieve feedback.", 500);
   }
 }
