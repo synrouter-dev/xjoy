@@ -1,9 +1,12 @@
 /**
- * Database client configuration.
- * Used by migration and seed scripts.
+ * @xjoy/db — Database layer
  *
- * For runtime queries, use the connection pool in @/lib/db.
+ * Re-exports:
+ * - db.ts: query functions (searchVerses, getVerse, conversations, etc.)
+ * - config: DB configuration helpers (migrate, seed use these)
  */
+
+// ── Database client configuration (used by migrate/seed scripts) ──
 
 export interface DbConfig {
   connectionString: string;
@@ -20,3 +23,29 @@ export function getDbConfig(): DbConfig {
     maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || "10", 10),
   };
 }
+
+// ── Query functions ──
+
+export {
+  getPool,
+  closePool,
+  searchVerses,
+  searchVersesBroad,
+  getVerse,
+  getChapter,
+  getVerseRange,
+  searchVersesByVector,
+  getCrossRefsFrom,
+  getCrossRefsTo,
+  createConversation,
+  getConversation,
+  getConversations,
+  updateConversationTitle,
+  addMessage,
+  getMessages,
+  type Conversation,
+  type Message,
+} from "./db.js";
+
+// Re-export shared types used in db.ts return types
+export type { Verse, VerseSearchResult } from "@xjoy/shared";

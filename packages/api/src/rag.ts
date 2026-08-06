@@ -198,8 +198,8 @@ export async function retrieveVerses(
   if (embedding) {
     const vectorResults = await searchVersesByVector(embedding, limit);
     for (const r of vectorResults) {
-      if (!seen.has(r.id)) {
-        seen.add(r.id);
+      if (!seen.has(r.id!)) {
+        seen.add(r.id!);
         results.push(r);
       }
     }
@@ -211,10 +211,10 @@ export async function retrieveVerses(
   // Fallback: if too few FTS results, try broader matching
   if (ftsResults.length < MIN_RESULTS) {
     const broadResults = await searchVersesBroad(query, limit);
-    const ftsSeen = new Set(ftsResults.map((r) => r.id));
+    const ftsSeen = new Set(ftsResults.map((r) => r.id!));
     for (const r of broadResults) {
-      if (!ftsSeen.has(r.id)) {
-        ftsSeen.add(r.id);
+      if (!ftsSeen.has(r.id!)) {
+        ftsSeen.add(r.id!);
         ftsResults.push(r);
       }
     }
@@ -222,8 +222,8 @@ export async function retrieveVerses(
 
   // Merge FTS results (after vector results)
   for (const r of ftsResults) {
-    if (!seen.has(r.id)) {
-      seen.add(r.id);
+    if (!seen.has(r.id!)) {
+      seen.add(r.id!);
       results.push(r);
     }
   }

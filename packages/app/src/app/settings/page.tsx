@@ -57,8 +57,8 @@ export default function SettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const chaptersRead = stats?.totalChaptersRead ?? 0;
-  const booksRead = stats?.totalBooksRead ?? 0;
+  const chaptersRead = stats?.total_chapters_read ?? 0;
+  const booksRead = stats?.total_books_started ?? 0;
   const totalChapters = 1189; // KJV total chapters
   const totalBooks = 66;
 
