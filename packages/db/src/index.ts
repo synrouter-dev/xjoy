@@ -45,7 +45,7 @@ export {
   getMessages,
   type Conversation,
   type Message,
-} from "./db.js";
+} from "./db";
 
 // Re-export shared types used in db.ts return types
 export type { Verse, VerseSearchResult } from "@xjoy/shared";
