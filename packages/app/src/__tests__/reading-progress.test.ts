@@ -7,12 +7,13 @@
  */
 
 import { describe, it, expect, jest } from "@jest/globals";
+import type { NextRequest } from "next/server";
 
 // ── Mock 数据层 ─────────────────────────────────────────────────────────────
 
-const mockRecordReading = jest.fn();
-const mockGetReadingHistory = jest.fn();
-const mockGetReadingStats = jest.fn();
+const mockRecordReading = jest.fn<any>();
+const mockGetReadingHistory = jest.fn<any>();
+const mockGetReadingStats = jest.fn<any>();
 
 jest.mock("@/lib/reading-progress", () => ({
   recordReading: (...args: unknown[]) => mockRecordReading(...args),
@@ -21,6 +22,10 @@ jest.mock("@/lib/reading-progress", () => ({
 }));
 
 import { GET, POST } from "@/app/api/reading-progress/route";
+
+function nextReq(url: string, init?: RequestInit): NextRequest {
+  return new Request(`http://localhost${url}`, init) as unknown as NextRequest;
+}
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -42,7 +47,7 @@ describe("Reading Progress API", () => {
       };
       mockGetReadingStats.mockResolvedValueOnce(mockStats);
 
-      const res = await GET(new Request("http://localhost/api/reading-progress?stats=true"));
+      const res = await GET(nextReq("/api/reading-progress?stats=true"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -56,7 +61,7 @@ describe("Reading Progress API", () => {
       ];
       mockGetReadingHistory.mockResolvedValueOnce(mockHistory);
 
-      const res = await GET(new Request("http://localhost/api/reading-progress"));
+      const res = await GET(nextReq("/api/reading-progress"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -67,7 +72,7 @@ describe("Reading Progress API", () => {
     it("自定义 limit", async () => {
       mockGetReadingHistory.mockResolvedValueOnce([]);
 
-      const res = await GET(new Request("http://localhost/api/reading-progress?limit=10"));
+      const res = await GET(nextReq("/api/reading-progress?limit=10"));
       await res.json();
 
       expect(mockGetReadingHistory).toHaveBeenCalledWith(10);
@@ -76,7 +81,7 @@ describe("Reading Progress API", () => {
     it("limit 上限为 200", async () => {
       mockGetReadingHistory.mockResolvedValueOnce([]);
 
-      const res = await GET(new Request("http://localhost/api/reading-progress?limit=500"));
+      const res = await GET(nextReq("/api/reading-progress?limit=500"));
       await res.json();
 
       expect(mockGetReadingHistory).toHaveBeenCalledWith(200);
@@ -85,7 +90,7 @@ describe("Reading Progress API", () => {
     it("数据库错误时返回 500", async () => {
       mockGetReadingHistory.mockRejectedValueOnce(new Error("DB error"));
 
-      const res = await GET(new Request("http://localhost/api/reading-progress"));
+      const res = await GET(nextReq("/api/reading-progress"));
       const body = await res.json();
 
       expect(res.status).toBe(500);
@@ -100,7 +105,7 @@ describe("Reading Progress API", () => {
       const mockRecord = { id: 3, book: "Matthew", chapter: 5, read_at: "2026-01-06T00:00:00Z" };
       mockRecordReading.mockResolvedValueOnce(mockRecord);
 
-      const req = new Request("http://localhost/api/reading-progress", {
+      const req = nextReq("/api/reading-progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ book: "Matthew", chapter: 5 }),
@@ -115,7 +120,7 @@ describe("Reading Progress API", () => {
     });
 
     it("缺少 book 返回 400", async () => {
-      const req = new Request("http://localhost/api/reading-progress", {
+      const req = nextReq("/api/reading-progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chapter: 3 }),
@@ -129,7 +134,7 @@ describe("Reading Progress API", () => {
     });
 
     it("chapter 不是数字返回 400", async () => {
-      const req = new Request("http://localhost/api/reading-progress", {
+      const req = nextReq("/api/reading-progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ book: "John", chapter: "three" }),
@@ -144,7 +149,7 @@ describe("Reading Progress API", () => {
         id: 4, book: "John", chapter: 3, read_at: "2026-01-07T00:00:00Z",
       });
 
-      const req = new Request("http://localhost/api/reading-progress", {
+      const req = nextReq("/api/reading-progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ book: "John", chapter: 3 }),

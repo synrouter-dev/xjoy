@@ -1,2 +1,13 @@
 export * from "./types";
-export * from "./bible";
+export {
+  getBooks,
+  getBookMeta,
+  getChapter,
+  getVerse,
+  getVerseRange,
+  getAdjacentChapters,
+  getFirstChapter,
+  isValidReference,
+  getTotalVerses,
+  resolveBookName,
+} from "./bible";

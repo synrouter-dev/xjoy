@@ -9,15 +9,16 @@
  */
 
 import { describe, it, expect, jest } from "@jest/globals";
+import type { NextRequest } from "next/server";
 
 // ── Mock 数据层 ─────────────────────────────────────────────────────────────
 
-const mockGetNotes = jest.fn();
-const mockGetNote = jest.fn();
-const mockGetNotesForVerse = jest.fn();
-const mockCreateNote = jest.fn();
-const mockUpdateNote = jest.fn();
-const mockDeleteNote = jest.fn();
+const mockGetNotes = jest.fn<any>();
+const mockGetNote = jest.fn<any>();
+const mockGetNotesForVerse = jest.fn<any>();
+const mockCreateNote = jest.fn<any>();
+const mockUpdateNote = jest.fn<any>();
+const mockDeleteNote = jest.fn<any>();
 
 jest.mock("@/lib/notes", () => ({
   getNotes: (...args: unknown[]) => mockGetNotes(...args),
@@ -30,16 +31,20 @@ jest.mock("@/lib/notes", () => ({
 
 import { GET, POST, PUT, DELETE } from "@/app/api/notes/route";
 
-function postBody(body: unknown): Request {
-  return new Request("http://localhost/api/notes", {
+function nextReq(url: string, init?: RequestInit): NextRequest {
+  return new Request(`http://localhost${url}`, init) as unknown as NextRequest;
+}
+
+function postBody(body: unknown): NextRequest {
+  return nextReq("/api/notes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
 
-function putBody(body: unknown): Request {
-  return new Request("http://localhost/api/notes", {
+function putBody(body: unknown): NextRequest {
+  return nextReq("/api/notes", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -60,7 +65,7 @@ describe("Notes API", () => {
       const mock = { id: 1, book: "John", chapter: 3, verse: 16, content: "神爱世人", created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z" };
       mockGetNote.mockResolvedValueOnce(mock);
 
-      const res = await GET(new Request("http://localhost/api/notes?id=1"));
+      const res = await GET(nextReq("/api/notes?id=1"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -70,7 +75,7 @@ describe("Notes API", () => {
     it("笔记不存在返回 404", async () => {
       mockGetNote.mockResolvedValueOnce(null);
 
-      const res = await GET(new Request("http://localhost/api/notes?id=999"));
+      const res = await GET(nextReq("/api/notes?id=999"));
       const body = await res.json();
 
       expect(res.status).toBe(404);
@@ -84,7 +89,7 @@ describe("Notes API", () => {
       ];
       mockGetNotesForVerse.mockResolvedValueOnce(mockNotes);
 
-      const res = await GET(new Request("http://localhost/api/notes?book=John&chapter=3&verse=16"));
+      const res = await GET(nextReq("/api/notes?book=John&chapter=3&verse=16"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -93,7 +98,7 @@ describe("Notes API", () => {
     });
 
     it("经文查找 chapter 非数字返回 400", async () => {
-      const res = await GET(new Request("http://localhost/api/notes?book=John&chapter=abc&verse=16"));
+      const res = await GET(nextReq("/api/notes?book=John&chapter=abc&verse=16"));
       const body = await res.json();
 
       expect(res.status).toBe(400);
@@ -102,7 +107,7 @@ describe("Notes API", () => {
     it("默认分页获取笔记列表", async () => {
       mockGetNotes.mockResolvedValueOnce([]);
 
-      const res = await GET(new Request("http://localhost/api/notes"));
+      const res = await GET(nextReq("/api/notes"));
       await res.json();
 
       expect(mockGetNotes).toHaveBeenCalledWith(50, 0);
@@ -111,7 +116,7 @@ describe("Notes API", () => {
     it("自定义 limit 和 offset", async () => {
       mockGetNotes.mockResolvedValueOnce([]);
 
-      const res = await GET(new Request("http://localhost/api/notes?limit=20&offset=10"));
+      const res = await GET(nextReq("/api/notes?limit=20&offset=10"));
       await res.json();
 
       expect(mockGetNotes).toHaveBeenCalledWith(20, 10);
@@ -189,7 +194,7 @@ describe("Notes API", () => {
     it("成功删除笔记", async () => {
       mockDeleteNote.mockResolvedValueOnce(true);
 
-      const res = await DELETE(new Request("http://localhost/api/notes?id=1"));
+      const res = await DELETE(nextReq("/api/notes?id=1"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -199,12 +204,12 @@ describe("Notes API", () => {
     it("笔记不存在返回 404", async () => {
       mockDeleteNote.mockResolvedValueOnce(false);
 
-      const res = await DELETE(new Request("http://localhost/api/notes?id=999"));
+      const res = await DELETE(nextReq("/api/notes?id=999"));
       expect(res.status).toBe(404);
     });
 
     it("缺少 id 返回 400", async () => {
-      const res = await DELETE(new Request("http://localhost/api/notes"));
+      const res = await DELETE(nextReq("/api/notes"));
       expect(res.status).toBe(400);
     });
   });

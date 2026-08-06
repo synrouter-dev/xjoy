@@ -8,12 +8,13 @@
  */
 
 import { describe, it, expect, jest } from "@jest/globals";
+import type { NextRequest } from "next/server";
 
 // ── Mock 数据层 ─────────────────────────────────────────────────────────────
 
-const mockAddBookmark = jest.fn();
-const mockGetBookmarks = jest.fn();
-const mockRemoveBookmark = jest.fn();
+const mockAddBookmark = jest.fn<any>();
+const mockGetBookmarks = jest.fn<any>();
+const mockRemoveBookmark = jest.fn<any>();
 
 jest.mock("@/lib/bookmarks", () => ({
   addBookmark: (...args: unknown[]) => mockAddBookmark(...args),
@@ -25,13 +26,16 @@ jest.mock("@/lib/bookmarks", () => ({
 
 import { GET, POST, DELETE } from "@/app/api/bookmarks/route";
 
-function createRequest(url: string, init?: { method?: string; body?: unknown }): Request {
-  const req = new Request(`http://localhost${url}`, {
+function nextReq(url: string, init?: RequestInit): NextRequest {
+  return new Request(`http://localhost${url}`, init) as unknown as NextRequest;
+}
+
+function createRequest(url: string, init?: { method?: string; body?: unknown }): NextRequest {
+  return nextReq(url, {
     method: init?.method ?? "GET",
     headers: { "Content-Type": "application/json" },
     ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
   });
-  return req;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -53,7 +57,7 @@ describe("Bookmarks API", () => {
       ];
       mockGetBookmarks.mockResolvedValueOnce(mockData);
 
-      const res = await GET(new Request("http://localhost/api/bookmarks"));
+      const res = await GET(nextReq("/api/bookmarks"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -64,7 +68,7 @@ describe("Bookmarks API", () => {
     it("支持自定义 limit 和 offset", async () => {
       mockGetBookmarks.mockResolvedValueOnce([]);
 
-      const res = await GET(new Request("http://localhost/api/bookmarks?limit=10&offset=5"));
+      const res = await GET(nextReq("/api/bookmarks?limit=10&offset=5"));
       await res.json();
 
       expect(mockGetBookmarks).toHaveBeenCalledWith(10, 5);
@@ -73,7 +77,7 @@ describe("Bookmarks API", () => {
     it("limit 上限为 200", async () => {
       mockGetBookmarks.mockResolvedValueOnce([]);
 
-      const res = await GET(new Request("http://localhost/api/bookmarks?limit=999"));
+      const res = await GET(nextReq("/api/bookmarks?limit=999"));
       await res.json();
 
       expect(mockGetBookmarks).toHaveBeenCalledWith(200, 0);
@@ -82,7 +86,7 @@ describe("Bookmarks API", () => {
     it("数据库错误时返回 500", async () => {
       mockGetBookmarks.mockRejectedValueOnce(new Error("DB down"));
 
-      const res = await GET(new Request("http://localhost/api/bookmarks"));
+      const res = await GET(nextReq("/api/bookmarks"));
       const body = await res.json();
 
       expect(res.status).toBe(500);
@@ -174,7 +178,7 @@ describe("Bookmarks API", () => {
     it("成功删除书签", async () => {
       mockRemoveBookmark.mockResolvedValueOnce(true);
 
-      const res = await DELETE(new Request("http://localhost/api/bookmarks?id=1"));
+      const res = await DELETE(nextReq("/api/bookmarks?id=1"));
       const body = await res.json();
 
       expect(res.status).toBe(200);
@@ -184,7 +188,7 @@ describe("Bookmarks API", () => {
     it("书签不存在时返回 404", async () => {
       mockRemoveBookmark.mockResolvedValueOnce(false);
 
-      const res = await DELETE(new Request("http://localhost/api/bookmarks?id=999"));
+      const res = await DELETE(nextReq("/api/bookmarks?id=999"));
       const body = await res.json();
 
       expect(res.status).toBe(404);
@@ -192,14 +196,14 @@ describe("Bookmarks API", () => {
     });
 
     it("缺少 id 参数时返回 400", async () => {
-      const res = await DELETE(new Request("http://localhost/api/bookmarks"));
+      const res = await DELETE(nextReq("/api/bookmarks"));
       const body = await res.json();
 
       expect(res.status).toBe(400);
     });
 
     it("id 不是数字时返回 400", async () => {
-      const res = await DELETE(new Request("http://localhost/api/bookmarks?id=abc"));
+      const res = await DELETE(nextReq("/api/bookmarks?id=abc"));
       const body = await res.json();
 
       expect(res.status).toBe(400);

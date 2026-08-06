@@ -6,7 +6,7 @@
  * in production. For a team-of-one prototype, this is the boring, correct choice.
  */
 
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -435,7 +435,12 @@ let _versesByBookChapter: Map<string, Verse[]> | null = null;
 function loadData(): Verse[] {
   if (_verses) return _verses;
 
-  const dataPath = join(process.cwd(), "data", "kjv.json");
+  // Try multiple paths for monorepo: from app/, from root, from shared/
+  const candidates = [
+    join(process.cwd(), "data", "kjv.json"),           // root
+    join(process.cwd(), "..", "..", "data", "kjv.json"), // from packages/app
+  ];
+  let dataPath = candidates.find((p) => existsSync(p)) ?? candidates[0];
 
   let raw: string;
   try {
