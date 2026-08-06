@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-serif: "Georgia", "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --color-paper-light: #faf9f6;
+  --color-paper-dark: #0d0d0d;
+  --color-ink-light: #1a1a1a;
+  --color-ink-dark: #e5e3dc;
+
+  --color-accent: #b8860b;
+  --color-accent-light: #d4a017;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-serif);
+  background: var(--color-paper-light);
+  color: var(--color-ink-light);
+}
+
+.dark body {
+  background: var(--color-paper-dark);
+  color: var(--color-ink-dark);
+}
+
+/* Focus ring for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ── Mobile scrollbar hide ── */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+  }
+}
+
+/* ── Safe area for bottom tab bar on notched phones ── */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Verse action button animation ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+/* ── Selection color ── */
+::selection {
+  background-color: rgba(184, 134, 11, 0.2);
+}
