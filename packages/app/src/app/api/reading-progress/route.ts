@@ -28,9 +28,8 @@ export async function GET(request: NextRequest) {
       parseInt(searchParams.get("limit") || "50", 10),
       200
     );
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const history = await getReadingHistory(limit, offset);
+    const history = await getReadingHistory(limit);
     return NextResponse.json({ history });
   } catch (err) {
     console.error("GET /api/reading-progress error:", err);
@@ -53,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const record = await recordReading(book, chapter);
+    const record = await recordReading({ book, chapter });
     return NextResponse.json({ record }, { status: 201 });
   } catch (err) {
     console.error("POST /api/reading-progress error:", err);

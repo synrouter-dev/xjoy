@@ -103,7 +103,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const note = await updateNote(id, { content });
+    const note = await updateNote({ id, content });
     if (!note) {
       return NextResponse.json(
         { error: "笔记不存在" },

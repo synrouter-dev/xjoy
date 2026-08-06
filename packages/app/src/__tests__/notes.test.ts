@@ -135,25 +135,18 @@ describe("Notes API", () => {
     });
 
     it("缺少 content 返回 400", async () => {
-      const res = await POST(postBody({
-        book: "John", chapter: 3, verse: 16,
-      }));
+      const res = await POST(postBody({ book: "John", chapter: 3, verse: 16 }));
       const body = await res.json();
-
       expect(res.status).toBe(400);
     });
 
     it("缺少 book 返回 400", async () => {
-      const res = await POST(postBody({
-        chapter: 3, verse: 16, content: "test",
-      }));
+      const res = await POST(postBody({ chapter: 3, verse: 16, content: "test" }));
       expect(res.status).toBe(400);
     });
 
     it("chapter 不是数字返回 400", async () => {
-      const res = await POST(postBody({
-        book: "John", chapter: "three", verse: 16, content: "test",
-      }));
+      const res = await POST(postBody({ book: "John", chapter: "three", verse: 16, content: "test" }));
       expect(res.status).toBe(400);
     });
   });
@@ -176,8 +169,6 @@ describe("Notes API", () => {
       mockUpdateNote.mockResolvedValueOnce(null);
 
       const res = await PUT(putBody({ id: 999, content: "更新" }));
-      const body = await res.json();
-
       expect(res.status).toBe(404);
     });
 

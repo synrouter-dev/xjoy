@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/luoshi/Documents/AI/obsidian-kjb/paperclip/project/packages/app/src/instrumentation.ts"],"sourcesContent":["/**\n * Next.js instrumentation hook — Sentry init.\n */\nexport async function register() {\n  if (process.env.NEXT_RUNTIME === \"nodejs\") {\n    await import(\"../sentry.server.config\");\n  }\n  if (process.env.NEXT_RUNTIME === \"edge\") {\n    await import(\"../sentry.edge.config\");\n  }\n}\n"],"names":["register"],"mappings":"AAAA;;CAEC;;;;AACM,eAAeA;IACpB,wCAA2C;QACzC;IACF;IACA;;AAGF"}}]
+}

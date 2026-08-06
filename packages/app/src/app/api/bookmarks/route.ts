@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bookmark = await addBookmark(book, chapter, verse, note);
+    const bookmark = await addBookmark({ book, chapter, verse, note });
     return NextResponse.json({ bookmark }, { status: 201 });
   } catch (err) {
     console.error("POST /api/bookmarks error:", err);

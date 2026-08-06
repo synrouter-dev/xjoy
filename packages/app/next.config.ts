@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  // Turbopack root for monorepo
+  // Monorepo: set turbopack root to project root (where pnpm-lock.yaml lives)
   turbopack: {
-    root: process.cwd(),
+    root: path.resolve(__dirname, "../.."),
   },
   // Transpile workspace packages
   transpilePackages: ["@xjoy/shared", "@xjoy/db", "@xjoy/api"],

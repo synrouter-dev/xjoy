@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 22, "column": 0}, "map": {"version":3,"sources":["file:///Users/luoshi/Documents/AI/obsidian-kjb/paperclip/project/packages/app/sentry.edge.config.ts"],"sourcesContent":["/**\n * Sentry configuration for the Edge runtime.\n */\nimport * as Sentry from \"@sentry/nextjs\";\n\nSentry.init({\n  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,\n  environment: process.env.NODE_ENV || \"development\",\n  tracesSampleRate: process.env.NODE_ENV === \"production\" ? 0.1 : 1.0,\n});\n"],"names":["dsn","process","env","NEXT_PUBLIC_SENTRY_DSN","environment","tracesSampleRate"],"mappings":";AAAA;;CAEC,GACD;;AAEA,gZAAW,CAAC;IACVA,KAAKC,QAAQC,GAAG,CAACC,sBAAsB;IACvCC,aAAa,mDAAwB;IACrCC,kBAAkB,sCAAwC,0BAAM;AAClE"}},
+    {"offset": {"line": 36, "column": 0}, "map": {"version":3,"sources":["file:///Users/luoshi/Documents/AI/obsidian-kjb/paperclip/project/packages/app/src/instrumentation.ts"],"sourcesContent":["/**\n * Next.js instrumentation hook — Sentry init.\n */\nexport async function register() {\n  if (process.env.NEXT_RUNTIME === \"nodejs\") {\n    await import(\"../sentry.server.config\");\n  }\n  if (process.env.NEXT_RUNTIME === \"edge\") {\n    await import(\"../sentry.edge.config\");\n  }\n}\n"],"names":["register"],"mappings":"AAAA;;CAEC;;;;AACM,eAAeA;IACpB;;IAGA,wCAAyC;QACvC;IACF;AACF"}}]
+}

@@ -352,7 +352,7 @@ function ProgressTab() {
     );
   }
 
-  if (!stats || stats.totalChaptersRead === 0) {
+  if (!stats || stats.total_chapters_read === 0) {
     return (
       <div className="text-center py-20">
         <div className="text-4xl mb-4 opacity-30">📖</div>
@@ -364,19 +364,19 @@ function ProgressTab() {
     );
   }
 
-  const progressPercent = Math.round((stats.totalChaptersRead / 1189) * 100);
+  const progressPercent = Math.round((stats.total_chapters_read / 1189) * 100);
 
   return (
     <div className="space-y-6">
       {/* Progress overview cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-          <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{stats.totalChaptersRead}</p>
+          <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{stats.total_chapters_read}</p>
           <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-1">已读章节</p>
         </div>
         <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{stats.totalBooksRead}</p>
-          <p className="text-xs text-emerald-600/70 dark:text-emerald-500/70 mt-1">已读书卷</p>
+          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{stats.total_books_started}</p>
+          <p className="text-xs text-emerald-600/70 dark:text-emerald-500/70 mt-1">已开始书卷</p>
         </div>
         <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
           <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{progressPercent}%</p>
@@ -389,7 +389,7 @@ function ProgressTab() {
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-neutral-500 dark:text-neutral-400">阅读进度</span>
           <span className="text-xs text-neutral-400 dark:text-neutral-500">
-            {stats.totalChaptersRead} / 1,189 章
+            {stats.total_chapters_read} / 1,189 章
           </span>
         </div>
         <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
@@ -400,48 +400,25 @@ function ProgressTab() {
         </div>
       </div>
 
-      {/* Recent reads */}
-      {stats.recentReads.length > 0 && (
+      {/* Last read */}
+      {stats.last_read_book && stats.last_read_chapter && (
         <div>
           <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
             最近阅读
           </h3>
-          <div className="space-y-2">
-            {stats.recentReads.map((r) => (
-              <Link
-                key={r.id}
-                href={`/reader/${encodeURIComponent(r.book)}/${r.chapter}`}
-                className="flex items-center gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-amber-200 dark:hover:border-amber-800 transition-colors"
-              >
-                <span className="text-sm font-medium text-amber-600 dark:text-amber-500">
-                  {r.book} {r.chapter}
-                </span>
-                <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-auto">
-                  {formatDate(r.read_at)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Books read */}
-      {stats.uniqueBooks.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-            已读书卷（{stats.uniqueBooks.length}）
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {stats.uniqueBooks.map((book) => (
-              <Link
-                key={book}
-                href={`/reader/${encodeURIComponent(book)}/1`}
-                className="px-3 py-1.5 rounded-full text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400 transition-colors"
-              >
-                {book}
-              </Link>
-            ))}
-          </div>
+          <Link
+            href={`/reader/${encodeURIComponent(stats.last_read_book)}/${stats.last_read_chapter}`}
+            className="flex items-center gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-amber-200 dark:hover:border-amber-800 transition-colors"
+          >
+            <span className="text-sm font-medium text-amber-600 dark:text-amber-500">
+              {stats.last_read_book} {stats.last_read_chapter}
+            </span>
+            {stats.last_read_at && (
+              <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-auto">
+                {formatDate(stats.last_read_at)}
+              </span>
+            )}
+          </Link>
         </div>
       )}
     </div>
