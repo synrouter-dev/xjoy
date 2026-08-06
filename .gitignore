@@ -48,3 +48,5 @@ next-env.d.ts
 data/kjv.db
 data/kjv.db-wal
 data/kjv.db-shm
+.next
+packages/app/.next
