@@ -48,5 +48,33 @@ next-env.d.ts
 data/kjv.db
 data/kjv.db-wal
 data/kjv.db-shm
+
+# App-local data copy (generated during Vercel build)
+packages/app/data/
 .next
 packages/app/.next
+
+# Capacitor — commit native project dirs, ignore build output
+packages/app/android/app/build/
+packages/app/android/.gradle/
+packages/app/android/build/
+packages/app/android/captures/
+packages/app/android/local.properties
+packages/app/ios/App/build/
+packages/app/ios/App/Pods/
+packages/app/ios/App/*.xcworkspace/xcuserdata/
+packages/app/ios/App/*.xcodeproj/xcuserdata/
+packages/app/build/
+packages/app/out/
+
+# Fastlane — ignore API keys, keep config
+packages/app/ios/App/fastlane/report.xml
+packages/app/ios/App/fastlane/Preview.html
+packages/app/ios/App/fastlane/screenshots/
+packages/app/ios/App/fastlane/test_output/
+packages/app/ios/App/fastlane/*.p8
+
+# Turbo cache
+.turbo
+
+.env*

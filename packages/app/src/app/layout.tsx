@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   keywords: ["圣经", "KJV", "King James", "经文", "AI 圣经", "Xjoy"],
   icons: {
     icon: "/favicon.png",
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
   appleWebApp: {

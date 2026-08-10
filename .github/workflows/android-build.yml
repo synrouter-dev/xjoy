@@ -1,0 +1,132 @@
+name: Android Build — APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type"
+        required: true
+        type: choice
+        options:
+          - release
+          - debug
+        default: release
+  push:
+    tags:
+      - "android-v*"
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  APP_DIR: packages/app
+  JAVA_VERSION: "17"
+
+jobs:
+  build-android:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Setup ──────────────────────────────────────────────────────────────
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── Set Production Config ──────────────────────────────────────────────
+
+      - name: Set production Capacitor config
+        working-directory: ${{ env.APP_DIR }}
+        run: cp capacitor.config.prod.ts capacitor.config.ts
+
+      # ── Generate Android Icons ─────────────────────────────────────────────
+
+      - name: Generate Android icons
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick 2>/dev/null || true
+          BASE="public/icon-512.png"
+          if [ -f "$BASE" ]; then
+            for dir_size in "mipmap-mdpi:48" "mipmap-hdpi:72" "mipmap-xhdpi:96" "mipmap-xxhdpi:144" "mipmap-xxxhdpi:192"; do
+              dir="${dir_size%%:*}"
+              size="${dir_size##*:}"
+              mkdir -p "android/app/src/main/res/$dir"
+              convert "$BASE" -resize "${size}x${size}" "android/app/src/main/res/$dir/ic_launcher.png" 2>/dev/null || true
+              convert "$BASE" -resize "${size}x${size}" "android/app/src/main/res/$dir/ic_launcher_round.png" 2>/dev/null || true
+              echo "  ✓ $dir (${size}x${size})"
+            done
+          fi
+
+      # ── Sync Capacitor ─────────────────────────────────────────────────────
+
+      - name: Sync Capacitor
+        working-directory: ${{ env.APP_DIR }}
+        run: npx cap sync
+
+      # ── Build APK ──────────────────────────────────────────────────────────
+
+      - name: Build release APK
+        working-directory: ${{ env.APP_DIR }}/android
+        run: ./gradlew assembleRelease
+
+      # ── Sign APK ───────────────────────────────────────────────────────────
+
+      - name: Sign APK
+        if: inputs.build_type == 'release'
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          APK="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED="android/app/build/outputs/apk/release/app-release.apk"
+          if [ -f "$APK" ] && [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > xjoy.keystore
+            $ANDROID_HOME/build-tools/35.0.0/apksigner sign \
+              --ks xjoy.keystore \
+              --ks-pass pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+              --ks-key-alias ${{ secrets.ANDROID_KEY_ALIAS }} \
+              --key-pass pass:${{ secrets.ANDROID_KEY_PASSWORD }} \
+              --out "$SIGNED" "$APK"
+            rm xjoy.keystore
+            echo "✅ Signed APK: $SIGNED"
+          else
+            echo "⚠️  Keystore not configured — skipping signing"
+            cp "$APK" "$(dirname "$APK")/app-release-unsigned.apk"
+          fi
+
+      # ── Upload Artifact ────────────────────────────────────────────────────
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xjoy-android-apk
+          path: |
+            packages/app/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      # ── Restore Dev Config ─────────────────────────────────────────────────
+
+      - name: Restore dev config
+        if: always()
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          git checkout capacitor.config.ts 2>/dev/null || true

@@ -15,6 +15,7 @@
     "db:seed": "pnpm --filter @xjoy/db seed"
   },
   "devDependencies": {
+    "next": "^16.0.0",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
   },

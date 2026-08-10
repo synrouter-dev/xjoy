@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "mkdir -p packages/app/data && cp data/kjv.json packages/app/data/kjv.json && pnpm turbo build --filter=@xjoy/app",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "outputDirectory": "packages/app/.next",
+  "regions": ["hkg1"]
+}

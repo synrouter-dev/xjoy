@@ -1,0 +1,16 @@
+# Xjoy iOS Code Signing (via Fastlane Match)
+#
+# Match 将代码签名证书和配置文件存储在私有 Git 仓库中。
+# 首次使用：
+#   1. 创建一个私有 GitHub 仓库用于存储签名文件
+#   2. 运行: fastlane match appstore
+#   3. 输入 MATCH_PASSWORD 加密签名文件
+#   4. 在 GitHub Secrets 中设置 MATCH_GIT_URL 和 MATCH_PASSWORD
+#
+# 如果使用 Xcode 自动签名（推荐单人开发 MVP）：
+#   注释掉 Fastfile 中的 match(...) 调用即可。
+
+# git_url("git@github.com:your-org/xjoy-certificates.git")
+# storage_mode("git")
+# type("appstore")
+# app_identifier("com.xjoy.bible")

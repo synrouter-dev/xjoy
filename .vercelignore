@@ -1,0 +1,82 @@
+# Dependencies — Vercel runs pnpm install
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js build output — Vercel rebuilds
+/.next/
+packages/app/.next
+packages/**/.next
+/out/
+packages/app/out/
+
+# Git
+/.git
+
+# Testing
+/coverage
+
+# Production build artifacts
+/build
+
+# Large data files — not needed for build
+data/kjv.db
+data/kjv.db-wal
+data/kjv.db-shm
+
+# App-local data copy (generated during build)
+packages/app/data/
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env files — use Vercel env vars
+.env
+.env*.local
+
+# Claude / Paperclip
+.claude/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Capacitor build output
+packages/app/android/app/build/
+packages/app/android/.gradle/
+packages/app/android/build/
+packages/app/android/captures/
+packages/app/android/local.properties
+packages/app/ios/App/build/
+packages/app/ios/App/Pods/
+packages/app/ios/App/*.xcworkspace/xcuserdata/
+packages/app/ios/App/*.xcodeproj/xcuserdata/
+packages/app/build/
+
+# Fastlane
+packages/app/ios/App/fastlane/report.xml
+packages/app/ios/App/fastlane/Preview.html
+packages/app/ios/App/fastlane/screenshots/
+packages/app/ios/App/fastlane/test_output/
+packages/app/ios/App/fastlane/*.p8
+
+# Turbo cache
+.turbo
+
+# Sentry
+.sentryclirc

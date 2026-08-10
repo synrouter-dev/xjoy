@@ -1,0 +1,8 @@
+# Xjoy iOS App Metadata
+
+app_identifier("com.xjoy.bible")  # The bundle identifier of your app
+apple_id("")                      # Your Apple ID email (fill in for local use)
+team_id("")                       # Your Apple Developer Team ID (fill in)
+
+# For CI, use App Store Connect API Key instead of Apple ID:
+# https://appstoreconnect.apple.com/access/integrations/api

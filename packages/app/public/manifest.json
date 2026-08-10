@@ -7,16 +7,38 @@
   "background_color": "#faf9f6",
   "theme_color": "#b8860b",
   "orientation": "portrait-primary",
+  "categories": ["education", "books", "lifestyle"],
+  "lang": "zh-CN",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "读经",
+      "short_name": "读经",
+      "description": "开始阅读圣经",
+      "url": "/reader",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI 问答",
+      "short_name": "问答",
+      "description": "向 AI 提问经文",
+      "url": "/chat",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

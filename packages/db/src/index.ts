@@ -43,9 +43,28 @@ export {
   updateConversationTitle,
   addMessage,
   getMessages,
+  getDailyQuizCache,
+  setDailyQuizCache,
+  saveQuizAttempt,
+  getTodayQuizAttempt,
+  getJigsawProgress,
+  awardJigsawPiece,
   type Conversation,
   type Message,
+  type DailyQuizCache,
+  type UserQuizAttempt,
+  type JigsawProgress,
 } from "./db";
+
+// ── Study Scores ──
+
+export {
+  saveScore,
+  getRecentScores,
+  getStudyStats,
+  type StudyScore,
+  type StudyStats,
+} from "./study-scores";
 
 // Re-export shared types used in db.ts return types
 export type { Verse, VerseSearchResult } from "@xjoy/shared";

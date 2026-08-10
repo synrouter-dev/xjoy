@@ -263,3 +263,126 @@ export async function getMessages(conversationId: string): Promise<Message[]> {
   );
   return result.rows;
 }
+
+// ── Daily Quiz Cache Queries ─────────────────────────────────────────────────
+
+export interface DailyQuizCache {
+  id: number;
+  quiz_date: string;
+  questions: any; // QuizQuestion[]
+  generated_by: string;
+  created_at: string;
+}
+
+/** Get cached quiz questions for a specific date. */
+export async function getDailyQuizCache(date: string): Promise<DailyQuizCache | null> {
+  const p = getPool();
+  const result: QueryResult<DailyQuizCache> = await p.query(
+    `SELECT id, quiz_date, questions, generated_by, created_at
+     FROM daily_quiz_cache WHERE quiz_date = $1 LIMIT 1`,
+    [date]
+  );
+  return result.rows[0] ?? null;
+}
+
+/** Store generated quiz questions for a date. */
+export async function setDailyQuizCache(
+  date: string, questions: any, generatedBy: string
+): Promise<DailyQuizCache> {
+  const p = getPool();
+  const result: QueryResult<DailyQuizCache> = await p.query(
+    `INSERT INTO daily_quiz_cache (quiz_date, questions, generated_by)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (quiz_date) DO UPDATE
+       SET questions = $2, generated_by = $3
+     RETURNING id, quiz_date, questions, generated_by, created_at`,
+    [date, JSON.stringify(questions), generatedBy]
+  );
+  return result.rows[0];
+}
+
+// ── User Quiz Attempt Queries ────────────────────────────────────────────────
+
+export interface UserQuizAttempt {
+  id: number;
+  quiz_date: string;
+  score: number;
+  total: number;
+  correct_count: number;
+  answers: any;
+  created_at: string;
+}
+
+/** Save a quiz attempt. */
+export async function saveQuizAttempt(
+  date: string, score: number, total: number, correctCount: number, answers: any
+): Promise<UserQuizAttempt> {
+  const p = getPool();
+  const result: QueryResult<UserQuizAttempt> = await p.query(
+    `INSERT INTO user_quiz_attempts (quiz_date, score, total, correct_count, answers)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, quiz_date, score, total, correct_count, answers, created_at`,
+    [date, score, total, correctCount, JSON.stringify(answers)]
+  );
+  return result.rows[0];
+}
+
+/** Get today's quiz attempt (latest first). */
+export async function getTodayQuizAttempt(date: string): Promise<UserQuizAttempt | null> {
+  const p = getPool();
+  const result: QueryResult<UserQuizAttempt> = await p.query(
+    `SELECT id, quiz_date, score, total, correct_count, answers, created_at
+     FROM user_quiz_attempts WHERE quiz_date = $1
+     ORDER BY created_at DESC LIMIT 1`,
+    [date]
+  );
+  return result.rows[0] ?? null;
+}
+
+// ── Weekly Jigsaw Progress Queries ──────────────────────────────────────────
+
+export interface JigsawProgress {
+  id: number;
+  year: number;
+  week: number;
+  piece_day: number; // 0=Sun, 6=Sat
+  earned_at: string;
+}
+
+/** Get all pieces earned for a specific week. */
+export async function getJigsawProgress(year: number, week: number): Promise<JigsawProgress[]> {
+  const p = getPool();
+  const result: QueryResult<JigsawProgress> = await p.query(
+    `SELECT id, year, week, piece_day, earned_at
+     FROM weekly_jigsaw_progress
+     WHERE year = $1 AND week = $2
+     ORDER BY piece_day`,
+    [year, week]
+  );
+  return result.rows;
+}
+
+/** Award a puzzle piece for a specific day of the week. */
+export async function awardJigsawPiece(
+  year: number, week: number, pieceDay: number
+): Promise<JigsawProgress> {
+  const p = getPool();
+  const result: QueryResult<JigsawProgress> = await p.query(
+    `INSERT INTO weekly_jigsaw_progress (year, week, piece_day)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (year, week, piece_day) DO NOTHING
+     RETURNING id, year, week, piece_day, earned_at`,
+    [year, week, pieceDay]
+  );
+  // If piece already exists, return existing
+  if (result.rows.length === 0) {
+    const existing = await p.query(
+      `SELECT id, year, week, piece_day, earned_at
+       FROM weekly_jigsaw_progress
+       WHERE year = $1 AND week = $2 AND piece_day = $3`,
+      [year, week, pieceDay]
+    );
+    return existing.rows[0];
+  }
+  return result.rows[0];
+}

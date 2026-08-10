@@ -109,3 +109,60 @@ export interface ReadingStats {
   last_read_chapter: number | null;
   last_read_at: string | null;
 }
+
+// ── Study 游戏化（Quiz + Jigsaw）──────────────────────────────────────────
+
+/** 题目难度 */
+export type QuizDifficulty = "easy" | "medium" | "hard";
+
+/** 题目类型 */
+export type QuizQuestionType =
+  | "book_origin"
+  | "fill_blank"
+  | "next_verse"
+  | "chapter_context";
+
+/** 单个选项 */
+export interface QuizOption {
+  label: string;
+  text: string;
+}
+
+/** 一道 Quiz 题目 */
+export interface QuizQuestion {
+  id: number;
+  type: QuizQuestionType;
+  difficulty: QuizDifficulty;
+  prompt: string;
+  reference: string;
+  options: QuizOption[];
+  correctAnswer: string;
+  explanation: string;
+}
+
+/** 一轮 Quiz */
+export interface QuizSession {
+  questions: QuizQuestion[];
+  difficulty: QuizDifficulty;
+}
+
+/** 拼图片段 */
+export interface JigsawPiece {
+  id: number;
+  text: string;
+  originalPosition: number;
+  verses: string;
+}
+
+/** 拼图题目 */
+export interface JigsawPuzzle {
+  id: string;
+  book: string;
+  chapter: number;
+  verseCount: number;
+  pieceCount: number;
+  pieces: JigsawPiece[];
+  weekStart: string;
+  weekNumber: number;
+  year: number;
+}

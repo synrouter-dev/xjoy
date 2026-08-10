@@ -1,4 +1,5 @@
 export * from "./types";
+export type { BookMeta } from "./bible";
 export {
   getBooks,
   getBookMeta,

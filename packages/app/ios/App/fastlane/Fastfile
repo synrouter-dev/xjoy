@@ -1,0 +1,76 @@
+# Xjoy iOS Fastlane Configuration
+#
+# 初次使用前需要配置：
+#   1. App Store Connect API Key: https://appstoreconnect.apple.com/access/integrations/api
+#   2. 将 API Key 下载到 ~/.fastlane/ 或通过 GitHub Secrets 注入
+#   3. 在 GitHub Secrets 中设置：
+#      - APP_STORE_CONNECT_API_KEY_ID
+#      - APP_STORE_CONNECT_API_ISSUER_ID
+#      - APP_STORE_CONNECT_API_KEY (base64 of the .p8 file)
+#      - MATCH_PASSWORD (用于加密签名证书)
+#      - MATCH_GIT_URL (存储签名证书的私有 git 仓库 URL)
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # 设置 App Store Connect API Key
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"]&.then { |b64|
+        Base64.decode64(b64)
+      },
+      in_house: false,
+    )
+
+    # 使用 match 管理代码签名（可选，首次手动配置后可注释掉）
+    # match(
+    #   type: "appstore",
+    #   app_identifier: "com.xjoy.bible",
+    #   git_url: ENV["MATCH_GIT_URL"],
+    #   git_basic_authorization: Base64.strict_encode64(
+    #     "#{ENV['MATCH_GIT_USER']}:#{ENV['MATCH_GIT_TOKEN']}"
+    #   ),
+    # )
+
+    # 更新版本号
+    increment_build_number(
+      xcodeproj: "App.xcodeproj",
+    )
+
+    # 构建
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "./build",
+      output_name: "Xjoy.ipa",
+      # 如果使用 Xcode 自动签名（推荐单人开发）
+      # 在 Xcode 中先手动配置一次，后续 CI 不传签名参数即可复用
+    )
+
+    # 上传到 TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: false,
+      # 分发说明（可选）
+      changelog: "Xjoy 测试版本 — #{Time.now.strftime('%Y-%m-%d %H:%M')}",
+    )
+  end
+
+  desc "Build Ad Hoc IPA (for internal testing without TestFlight)"
+  lane :adhoc do
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "ad-hoc",
+      clean: true,
+      output_directory: "./build",
+      output_name: "Xjoy-adhoc.ipa",
+    )
+  end
+end

@@ -436,15 +436,21 @@ function loadData(): Verse[] {
   if (_verses) return _verses;
 
   // Try multiple paths for monorepo: from app/, from root, from shared/
+  // Vercel deploys from root, so "data/kjv.json" should resolve.
+  // In local dev from packages/app, the "../../data/kjv.json" path is needed.
   const candidates = [
-    join(process.cwd(), "data", "kjv.json"),           // root
-    join(process.cwd(), "..", "..", "data", "kjv.json"), // from packages/app
+    join(process.cwd(), "data", "kjv.json"),                  // root (Vercel, Fly.io)
+    join(process.cwd(), "packages", "app", "data", "kjv.json"), // root → app copy (Vercel alternate)
+    join(process.cwd(), "..", "..", "data", "kjv.json"),      // from packages/app (local dev)
   ];
   let dataPath = candidates.find((p) => existsSync(p)) ?? candidates[0];
 
   let raw: string;
   try {
-    raw = readFileSync(dataPath, "utf-8");
+    // turbopackIgnore: this data file is intentionally loaded at runtime;
+    // static analysis of process.cwd() causes whole-project tracing which
+    // exceeds Vercel deployment size limits.
+    raw = readFileSync(/* turbopackIgnore: true */ dataPath, "utf-8");
   } catch (err) {
     console.error(
       `Failed to read KJV data at ${dataPath}: ${

@@ -6,6 +6,8 @@
  */
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   let dbStatus: "ok" | "unreachable" = "unreachable";
 

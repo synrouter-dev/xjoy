@@ -1,0 +1,114 @@
+name: iOS Build — TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type"
+        required: true
+        type: choice
+        options:
+          - testflight
+          - adhoc
+        default: testflight
+  push:
+    tags:
+      - "ios-v*"
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  APP_DIR: packages/app
+
+jobs:
+  build-ios:
+    name: Build & Upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Setup ──────────────────────────────────────────────────────────────
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── Build Web App (optional — skip if using server URL mode) ────────────
+      # 当前使用 server URL 模式（加载 Vercel 部署），无需构建 web 资源。
+      # 如果改为 bundled 模式，取消下方注释：
+      # - name: Build Next.js
+      #   run: pnpm turbo build --filter=@xjoy/app
+      #   env:
+      #     SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      #     SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      #     SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      #     NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+
+      # ── Set Production Config ──────────────────────────────────────────────
+
+      - name: Set production Capacitor config
+        working-directory: ${{ env.APP_DIR }}
+        run: cp capacitor.config.prod.ts capacitor.config.ts
+
+      # ── Generate Icons ─────────────────────────────────────────────────────
+
+      - name: Generate app icons
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          # 使用 icon-512.png 作为基础图标（如果没有 icon-1024.png）
+          if [ -f "public/icon-512.png" ]; then
+            mkdir -p ios/App/App/Assets.xcassets/AppIcon.appiconset
+            # 生成关键尺寸
+            for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do
+              sips -z $size $size public/icon-512.png \
+                --out "ios/App/App/Assets.xcassets/AppIcon.appiconset/icon-${size}.png" 2>/dev/null || true
+            done
+            echo "✓ iOS icons generated from icon-512.png"
+          fi
+
+      # ── Sync Capacitor ─────────────────────────────────────────────────────
+
+      - name: Sync Capacitor
+        working-directory: ${{ env.APP_DIR }}
+        run: npx cap sync
+
+      # ── Install Fastlane ───────────────────────────────────────────────────
+
+      - name: Setup Fastlane
+        run: gem install fastlane -NV
+
+      # ── Build & Upload to TestFlight ───────────────────────────────────────
+
+      - name: Build and upload to TestFlight
+        working-directory: ${{ env.APP_DIR }}/ios/App
+        run: |
+          fastlane ios beta
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+
+      # ── Restore Dev Config ─────────────────────────────────────────────────
+
+      - name: Restore dev config
+        if: always()
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          git checkout capacitor.config.ts 2>/dev/null || true

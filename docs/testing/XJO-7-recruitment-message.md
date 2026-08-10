@@ -1,0 +1,67 @@
+# Xjoy 内测邀请文案
+
+以下文案可直接发给潜在测试用户（微信、邮件、教会群等）。
+
+---
+
+## 中文版（推荐）
+
+**标题：邀请你体验一款 AI 圣经应用 🙏📖**
+
+你好！我们正在开发一款叫 **Xjoy** 的 AI 圣经应用——它基于 KJV 英王钦定本，让你可以用自然语言和经文对话。
+
+比如你可以问它：
+- "信心和行为的区别是什么？"
+- "马太福音 5 章的八福是什么意思？"
+- "帮我找到关于盼望的经文"
+
+AI 会引经据典地回复你，每条回答都标注了具体经文出处，确保不会凭空捏造。
+
+**我们需要你的帮助！** 🧪
+
+我们现在开放内测，想邀请 5-10 位朋友试用 1 周，然后告诉我们你的真实感受。
+
+📱 **怎么开始？**
+1. 用手机或电脑浏览器打开：`https://xjoy-gray.vercel.app`
+2. 试用 AI 对话和经文浏览
+3. 每次体验后，点底部的「反馈」按钮告诉我们你的想法（1 分钟搞定）
+
+⏰ **测试时间**：8 月 10 日 — 8 月 17 日
+
+不需要下载任何 App，浏览器打开就能用！你的每一条反馈都会直接影响产品方向。
+
+感谢你帮助我们建造一个更好的圣经工具！✝️
+
+---
+
+## English Version (for English-speaking testers)
+
+**Subject: Help us test an AI-powered KJV Bible app 📖**
+
+Hi! I'm building **Xjoy** — an AI-driven KJV Bible app that lets you converse with scripture in natural language.
+
+You can ask things like:
+- "What does the Bible say about faith?"
+- "Explain the Beatitudes in Matthew 5"
+- "Show me verses about hope"
+
+The AI responds with actual KJV verses, each with citation references — no made-up scripture.
+
+**We need your help testing it!** 🧪
+
+We're looking for 5-10 early testers to try the app for 1 week and share honest feedback.
+
+📱 **How to start:**
+1. Open `https://prevention-handbags-awesome-header.trycloudflare.com` on your phone or computer
+2. Try the AI chat and Bible reading features
+3. After each session, click the "Feedback" button to share your thoughts (takes 1 minute)
+
+⏰ **Testing period**: August 10–17, 2026
+
+No app download needed — just open the link in your browser! Every piece of feedback directly shapes the product.
+
+Thank you for helping us build a better Bible tool! ✝️
+
+---
+
+*Sent by the Xjoy founding team*
