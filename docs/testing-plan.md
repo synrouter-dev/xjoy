@@ -1,8 +1,9 @@
 # Xjoy 用户测试计划 (v1)
 
 > Issue: XJO-7 — Initial User Testing & Feedback Loop  
-> 日期: 2026-08-06  
-> 周期: 1 周（8 月 10 日 — 8 月 17 日）
+> 日期: 2026-08-11  
+> 周期: 1 周（8 月 12 日 — 8 月 19 日）  
+> 部署 URL: https://xjoy-gray.vercel.app (PWA)
 
 ## 1. 测试目标
 
@@ -50,7 +51,7 @@
 
 ### 4.1 应用内反馈表单（主渠道）
 
-- URL: `https://prevention-handbags-awesome-header.trycloudflare.com/feedback`
+- URL: `https://xjoy-gray.vercel.app/feedback`
 - 覆盖 5 个类别：AI 准确性、阅读体验、整体印象、功能建议、Bug
 - 支持 1-5 星评分 + 详细文字反馈
 
@@ -63,12 +64,13 @@
 
 | 日期 | 活动 |
 |------|------|
-| 8/10 (Sun) | 部署上线，发送邀请，发布测试计划 |
-| 8/11 (Mon) | 用户开始测试，监控异常 |
-| 8/12-8/14 (Tue-Thu) | 测试高峰期 |
-| 8/15 (Fri) | 提醒未完成的用户 |
-| 8/16 (Sat) | 收集收尾反馈 |
-| 8/17 (Sun) | 汇总分析，撰写学习报告 |
+| ~~8/11 (Mon)~~ | ~~PWA 部署就绪（XJO-284 done），完成冒烟测试，更新文档~~ ✅ 已完成 |
+| 8/11 (Mon) 实际 | XJO-284 关闭，冒烟测试通过（部署 Ready，别名生效，hkg1），文档就绪 |
+| 8/12 (Tue) | 发送招募邀请，用户开始测试 |
+| 8/13-8/15 (Wed-Fri) | 测试高峰期 |
+| 8/16 (Sat) | 提醒未完成的用户 |
+| 8/17 (Sun) | 收集收尾反馈 |
+| 8/18-8/19 (Mon-Tue) | 汇总分析，撰写学习报告 |
 
 ## 6. 成功指标
 
@@ -102,13 +104,46 @@
 | AI 准确性 | RAG 管道问题 → 优先处理 |
 | 正面反馈 | 记录到学习报告，用于团队激励 |
 
-## 8. 风险与缓解
+## 8. 冒烟测试记录
+
+### 8.1 初始部署（8/11 上午）
+
+| 检查项 | 结果 | 备注 |
+|--------|------|------|
+| Vercel 部署状态 | ✅ Ready | `xjoy-1ede942a5-synrouter.vercel.app`，构建成功 |
+| 生产别名 | ✅ 生效 | `xjoy-gray.vercel.app` → 最新部署 |
+| 部署区域 | ✅ hkg1 | 香港节点，亚太用户低延迟 |
+| 环境变量 | ✅ 已配置 | DATABASE_URL, ANTHROPIC_API_KEY, OPENAI_API_KEY |
+
+### 8.2 本地回退部署 commit `7669b13`（8/11 下午）
+
+| 检查项 | 结果 | 备注 |
+|--------|------|------|
+| Vercel 部署 | ✅ Ready | `xjoy-iqv8ctxrk-synrouter.vercel.app`，构建 19s |
+| 生产别名 | ✅ 更新 | `xjoy-gray.vercel.app` → commit 7669b13 |
+| TypeScript 检查 | ✅ 通过 | 0 错误 |
+| 本地搜索回退 | 🆕 已部署 | `local-search.ts` 406行，Neon 不可用时自动回退 |
+| 全部路由 | ✅ 29/29 | 含 feedback, admin, chat, reader, search |
+
+### 8.3 冒烟测试检查清单
+
+请在浏览器中手动验证（当前环境无法访问外部 URL）：
+
+- [ ] 打开 https://xjoy-gray.vercel.app，确认页面加载
+- [ ] 进入 AI 对话页面 `/chat`，测试提问
+- [ ] 进入经文阅读器 `/reader`，浏览经文
+- [ ] 使用搜索功能 `/search`，搜索关键词
+- [ ] 进入反馈页面 `/feedback`，确认反馈表单可访问
+- [ ] 检查导航栏是否有「反馈」入口（桌面侧边栏 + 移动端底部）
+- [ ] 检查 PWA 安装提示
+
+## 9. 风险与缓解
 
 | 风险 | 缓解措施 |
 |------|----------|
 | 用户数量不足 | 扩大邀请范围到在线社区（Reddit r/Bible, r/TrueChristian） |
 | AI API 额度不足 | 监控 Anthropic API 使用量，设置预算警告 |
-| 数据库连接问题 | 确认 Fly.io PostgreSQL 配置正确 |
+| 数据库连接问题 | Neon 集成需 @board 在 Vercel 控制台接受条款 |
 | 移动端体验差 | 优先测试移动端响应式设计 |
 | 反馈质量低 | 提供具体的测试任务引导用户 |
 
