@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 允许手动触发
+  workflow_dispatch:
+
+# 设置 GITHUB_TOKEN 权限以允许部署到 GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同时只允许一个部署运行
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build static export
+        run: |
+          cd packages/app
+          pnpm run build:export
+        env:
+          NEXT_EXPORT: "true"
+          # GitHub Pages 子路径 — 仓库名为 xjoy，使用 /xjoy
+          # 自定义域名时设为空字符串
+          NEXT_BASE_PATH: ${{ vars.NEXT_BASE_PATH || '/xjoy' }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # build-static.mjs 输出到 packages/app/out/
+          path: packages/app/out
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
