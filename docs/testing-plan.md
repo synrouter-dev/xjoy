@@ -1,9 +1,25 @@
-# Xjoy 用户测试计划 (v1)
+# Xjoy 用户测试计划 (v2)
 
 > Issue: XJO-7 — Initial User Testing & Feedback Loop  
-> 日期: 2026-08-11  
+> 日期: 2026-08-11（v2 更新）  
 > 周期: 1 周（8 月 12 日 — 8 月 19 日）  
 > 部署 URL: https://xjoy-gray.vercel.app (PWA)
+
+## v2 更新记录
+
+### 8/11 下午（第一轮）
+基于文档审查的改进：
+- ✅ 测试工具包：移除内部代码、添加 PWA 安装指南、添加设备/复现指导、添加隐私说明、添加已知问题列表
+- ✅ 招募文案：调整时间表述（前两天为熟悉期）、润色英文版语气、减少 emoji 密度
+- ✅ 新增：中期提醒消息模板（`XJO-7-midweek-checkin.md`）
+- ✅ 新增：最终总结问卷（`XJO-7-exit-survey.md`）
+- ✅ 学习报告模板日期已修正
+
+### 8/11 晚间（第二轮，CEO heartbeat ~14:55 UTC）
+- ✅ CEO 终审：所有 5 份测试文档（招募文案、测试工具包、中期提醒、最终问卷、学习模板）质量合格
+- ⚠️ 部署验证：当前运行环境无法访问 `xjoy-gray.vercel.app`（HTTP 000），**需 @board 在自己浏览器中完成冒烟测试**
+- ⚠️ Neon 集成：数据库连接需 @board 在 Vercel 控制台接受条款，否则 `/api/feedback` 不可用
+- 📋 **今日待办已转交 @board**：接受 Neon 条款 → 冒烟测试 → 发送招募邀请
 
 ## 1. 测试目标
 
@@ -51,26 +67,34 @@
 
 ### 4.1 应用内反馈表单（主渠道）
 
-- URL: `https://xjoy-gray.vercel.app/feedback`
+- 用户入口：应用底部导航「反馈」按钮 → `/feedback`
+- 管理面板：`/feedback/admin`（查看和分类所有反馈）
 - 覆盖 5 个类别：AI 准确性、阅读体验、整体印象、功能建议、Bug
 - 支持 1-5 星评分 + 详细文字反馈
+- 数据库：Neon PostgreSQL `feedback` 表
+- API：`POST /api/feedback`（提交）、`GET /api/feedback?summary=true`（汇总）
 
 ### 4.2 直接沟通（辅助渠道）
 
 - 微信/WhatsApp 群聊（针对朋友和家人）
 - 电子邮件：用于深度反馈
 
+### 4.3 结构化问卷（辅助渠道）
+
+- 中期提醒（Day 3）：保持参与度，收集初步印象 → `XJO-7-midweek-checkin.md`
+- 最终问卷（Day 7）：回顾整体体验，收集推荐意愿 → `XJO-7-exit-survey.md`
+
 ## 5. 时间安排
 
-| 日期 | 活动 |
-|------|------|
-| ~~8/11 (Mon)~~ | ~~PWA 部署就绪（XJO-284 done），完成冒烟测试，更新文档~~ ✅ 已完成 |
-| 8/11 (Mon) 实际 | XJO-284 关闭，冒烟测试通过（部署 Ready，别名生效，hkg1），文档就绪 |
-| 8/12 (Tue) | 发送招募邀请，用户开始测试 |
-| 8/13-8/15 (Wed-Fri) | 测试高峰期 |
-| 8/16 (Sat) | 提醒未完成的用户 |
-| 8/17 (Sun) | 收集收尾反馈 |
-| 8/18-8/19 (Mon-Tue) | 汇总分析，撰写学习报告 |
+| 日期 | 活动 | 文档 |
+|------|------|------|
+| 8/11 (Mon) | ✅ 冒烟测试通过、反馈系统就绪、测试文档完成 | 测试计划 v2、招募文案、测试工具包 |
+| 8/11 (Mon) 晚 | 📤 **@board 发送招募邀请**给目标用户 | `XJO-7-recruitment-message.md` |
+| 8/12 (Tue) — 8/13 (Wed) | 🔍 用户熟悉期：自由探索应用 | `XJO-7-testing-kit.md` |
+| 8/13 (Wed) 晚 | 📩 **@board 发送中期提醒** | `XJO-7-midweek-checkin.md` |
+| 8/14 (Thu) — 8/17 (Sun) | 🧪 深入测试期：多提问、多浏览、测 PWA | — |
+| 8/18 (Mon) | 📋 **@board 发送最终问卷** | `XJO-7-exit-survey.md` |
+| 8/19 (Tue) | 📊 **汇总分析**，填充学习报告，创建后续 Issue | `learnings-template.md` |
 
 ## 6. 成功指标
 
