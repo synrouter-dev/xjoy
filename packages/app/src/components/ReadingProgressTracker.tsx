@@ -7,6 +7,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { recordReading } from "@/lib/reading-progress-client";
 
 interface ReadingProgressTrackerProps {
   book: string;
@@ -20,14 +21,10 @@ export function ReadingProgressTracker({ book, chapter }: ReadingProgressTracker
     if (recorded.current) return;
     recorded.current = true;
 
-    fetch("/api/reading-progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ book, chapter }),
-    }).catch(() => {
-      // Silent fail — reading progress is non-critical
+    recordReading({ book, chapter }).catch(() => {
+      // 静默失败 — 阅读进度非关键功能
     });
   }, [book, chapter]);
 
-  return null; // No UI, just side effects
+  return null; // 无 UI，仅有副作用
 }

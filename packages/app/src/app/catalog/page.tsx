@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getBooks } from "@/lib/bible-data";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,14 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 优先使用客户端数据（零网络请求），API 作为回退
+    const localBooks = getBooks();
+    if (localBooks.length > 0) {
+      setBooks(localBooks);
+      setLoading(false);
+      return;
+    }
+
     fetch("/api/books")
       .then((res) => res.json())
       .then((data) => setBooks(data.books ?? []))

@@ -8,7 +8,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import type { VerseCitation } from "@xjoy/api";
+import type { VerseCitation } from "@xjoy/shared";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

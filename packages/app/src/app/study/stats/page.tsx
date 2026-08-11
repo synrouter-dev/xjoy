@@ -2,7 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { StudyStats } from "@xjoy/db";
+
+/** 学习统计数据（本地类型，避免从 @xjoy/db 导入 pg）。 */
+interface StudyStats {
+  streak: {
+    current_days: number;
+    longest_days: number;
+    total_active_days: number;
+  };
+  quiz: {
+    total_games: number;
+    total_questions: number;
+    accuracy: number;
+    high_score: number;
+  };
+  jigsaw: {
+    total_games: number;
+    best_score: number;
+    avg_accuracy: number;
+    best_time: number;
+  };
+  chapters_completed: number;
+}
 
 export default function StatsPage() {
   const router = useRouter();

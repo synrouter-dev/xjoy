@@ -1,13 +1,14 @@
 /**
  * 搜索页 — Search
  *
- * Full-text search over the KJV Bible.
+ * 全文搜索 KJV 圣经。优先使用 API，不可用时回退到客户端搜索。
  */
 "use client";
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import type { VerseSearchResult } from "@xjoy/db";
+import { searchVerses as clientSearch } from "@/lib/bible-data";
+import type { VerseSearchResult } from "@xjoy/shared";
 
 const POPULAR_SEARCHES = [
   "信心",
@@ -27,6 +28,7 @@ export default function SearchPage() {
   const [results, setResults] = useState<VerseSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [dataSource, setDataSource] = useState<"api" | "local" | null>(null);
 
   const handleSearch = useCallback(async (q?: string) => {
     const term = (q ?? query).trim();
@@ -36,14 +38,28 @@ export default function SearchPage() {
     setSearched(true);
 
     try {
+      // 优先尝试 API
       const res = await fetch(
         `/api/verses?q=${encodeURIComponent(term)}&limit=20`
       );
-      if (!res.ok) throw new Error("搜索失败");
-      const data = await res.json();
-      setResults(data.results ?? []);
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data.results ?? []);
+        setDataSource("api");
+        return;
+      }
+    } catch {
+      // API 不可用，回退到客户端搜索
+    }
+
+    // 客户端回退
+    try {
+      const clientResults = await clientSearch(term, 20);
+      setResults(clientResults);
+      setDataSource("local");
     } catch {
       setResults([]);
+      setDataSource(null);
     } finally {
       setLoading(false);
     }
@@ -115,6 +131,9 @@ export default function SearchPage() {
             <div className="space-y-3">
               <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-4">
                 找到 {results.length} 条相关经文
+                {dataSource === "local" && (
+                  <span className="ml-1 text-xs text-neutral-400">（离线模式）</span>
+                )}
               </p>
               {results.map((v) => (
                 <Link

@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
 
   // 生产环境：从 Vercel 部署加载
   server: {
-    url: "https://xjoy.vercel.app",
+    url: "https://xjoy-gray.vercel.app",
     cleartext: false,
   },
 

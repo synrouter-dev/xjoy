@@ -7,9 +7,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import type { Note } from "@/lib/notes";
-import type { Bookmark } from "@/lib/bookmarks";
-import type { ReadingStats } from "@/lib/reading-progress";
+import { localNotes, localBookmarks, localReadingProgress } from "@/lib/storage/local-stores";
+import type { LocalNote, LocalBookmark, LocalReadingStats } from "@/lib/storage/local-stores";
+
+// 本地类型别名（兼容原有 API 类型）
+type Note = LocalNote;
+type Bookmark = LocalBookmark;
+type ReadingStats = LocalReadingStats;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,21 +38,29 @@ function BookmarksTab() {
     try {
       setLoading(true);
       const res = await fetch("/api/bookmarks?limit=100");
-      if (!res.ok) throw new Error("获取书签失败");
-      const data = await res.json();
-      setBookmarks(data.bookmarks ?? []);
+      if (res.ok) {
+        const data = await res.json();
+        setBookmarks(data.bookmarks ?? []);
+        return;
+      }
     } catch {
-      // silent
-    } finally {
-      setLoading(false);
+      // API 不可用，回退到 localStorage
     }
+    // localStorage 回退
+    setBookmarks(localBookmarks.getAll(100));
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchBookmarks(); }, [fetchBookmarks]);
 
   const handleDelete = async (bm: Bookmark) => {
     if (!confirm(`确定删除「${bm.book} ${bm.chapter}:${bm.verse}」的书签？`)) return;
-    await fetch(`/api/bookmarks?id=${bm.id}`, { method: "DELETE" });
+    try {
+      await fetch(`/api/bookmarks?id=${bm.id}`, { method: "DELETE" });
+    } catch {
+      // API 不可用，使用 localStorage
+    }
+    localBookmarks.remove(bm.id);
     fetchBookmarks();
   };
 
@@ -184,15 +196,19 @@ function NotesTab() {
   const fetchNotes = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetch("/api/notes?limit=100");
-      if (!res.ok) throw new Error("获取笔记失败");
-      const data = await res.json();
-      setNotes(data.notes);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "获取笔记失败");
-    } finally {
-      setLoading(false);
+      if (res.ok) {
+        const data = await res.json();
+        setNotes(data.notes);
+        return;
+      }
+    } catch {
+      // API 不可用，回退到 localStorage
     }
+    // localStorage 回退
+    setNotes(localNotes.getAll(100));
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchNotes(); }, [fetchNotes]);
@@ -206,12 +222,18 @@ function NotesTab() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editingNote.id, content }),
         });
-        if (!res.ok) throw new Error("更新失败");
-        setEditingNote(null);
-        fetchNotes();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : "操作失败");
+        if (res.ok) {
+          setEditingNote(null);
+          fetchNotes();
+          return;
+        }
+      } catch {
+        // API 不可用
       }
+      // localStorage 回退
+      localNotes.update(editingNote.id, content);
+      setEditingNote(null);
+      fetchNotes();
     },
     [editingNote, fetchNotes]
   );
@@ -221,11 +243,15 @@ function NotesTab() {
       if (!confirm(`确定删除「${note.book} ${note.chapter}:${note.verse}」的笔记？`)) return;
       try {
         const res = await fetch(`/api/notes?id=${note.id}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("删除失败");
-        fetchNotes();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : "删除失败");
+        if (res.ok) {
+          fetchNotes();
+          return;
+        }
+      } catch {
+        // API 不可用
       }
+      localNotes.remove(note.id);
+      fetchNotes();
     },
     [fetchNotes]
   );
@@ -323,14 +349,17 @@ function ProgressTab() {
       setLoading(true);
       setError(null);
       const res = await fetch("/api/reading-progress?stats=true");
-      if (!res.ok) throw new Error("获取阅读进度失败");
-      const data = await res.json();
-      setStats(data.stats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "获取阅读进度失败");
-    } finally {
-      setLoading(false);
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.stats);
+        return;
+      }
+    } catch {
+      // API 不可用，回退到 localStorage
     }
+    // localStorage 回退
+    setStats(localReadingProgress.getStats());
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);

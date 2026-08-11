@@ -1,9 +1,18 @@
-# Xjoy 用户测试计划 (v2)
+# Xjoy 用户测试计划 (v3)
 
 > Issue: XJO-7 — Initial User Testing & Feedback Loop  
-> 日期: 2026-08-11（v2 更新）  
-> 周期: 1 周（8 月 12 日 — 8 月 19 日）  
-> 部署 URL: https://xjoy-gray.vercel.app (PWA)
+> 日期: 2026-08-11（v3 更新）  
+> 周期: 1 周（弹性启动，取决于 @board 完成阻塞项日期）  
+> 部署 URL: https://xjoy-gray.vercel.app (PWA)  
+> 状态: 🔒 阻塞中 — 等待 @board 完成 3 项前置操作
+
+## v3 更新记录
+
+### 8/11 深夜（CEO heartbeat）
+- 🔒 时间线改为弹性模式：XJO-7 因 @board 前置操作未完成而阻塞
+- 📅 原固定日期（8/12-8/19）替换为 D-Day 弹性时间表
+- 📋 新增 3 种场景预估（乐观/现实/保守）
+- 📋 新增 §10 阻塞状态追踪
 
 ## v2 更新记录
 
@@ -86,15 +95,33 @@
 
 ## 5. 时间安排
 
+> ⚠️ **时间线取决于 @board 何时完成 3 项阻塞操作**（见 §10）。以下为弹性时间表，以「D-Day」为招募邀请发出日。
+
+### 弹性时间表
+
+| 相对日期 | 活动 | 文档 |
+|------|------|------|
+| D-Day | 📤 **@board 发送招募邀请**给目标用户（完成 Neon 条款 + 冒烟测试后） | `XJO-7-recruitment-message.md` |
+| D+1 — D+2 | 🔍 用户熟悉期：自由探索应用 | `XJO-7-testing-kit.md` |
+| D+2 晚 | 📩 **@board 发送中期提醒** | `XJO-7-midweek-checkin.md` |
+| D+3 — D+6 | 🧪 深入测试期：多提问、多浏览、测 PWA | — |
+| D+7 | 📋 **@board 发送最终问卷** | `XJO-7-exit-survey.md` |
+| D+8 | 📊 **汇总分析**，填充学习报告，创建后续 Issue | `learnings-template.md` |
+
+### 场景预估
+
+| 场景 | @board 完成阻塞项 | D-Day | 测试结束 | 汇总日期 |
+|------|-------------------|-------|----------|----------|
+| A（乐观） | 8/11 当晚 | 8/11 (Mon) | 8/18 (Mon) | 8/19 (Tue) |
+| B（现实） | 8/12 (Tue) | 8/12 (Tue) | 8/19 (Tue) | 8/20 (Wed) |
+| C（保守） | 8/13 (Wed) | 8/13 (Wed) | 8/20 (Wed) | 8/21 (Thu) |
+
+### 历史版本
+
 | 日期 | 活动 | 文档 |
 |------|------|------|
 | 8/11 (Mon) | ✅ 冒烟测试通过、反馈系统就绪、测试文档完成 | 测试计划 v2、招募文案、测试工具包 |
-| 8/11 (Mon) 晚 | 📤 **@board 发送招募邀请**给目标用户 | `XJO-7-recruitment-message.md` |
-| 8/12 (Tue) — 8/13 (Wed) | 🔍 用户熟悉期：自由探索应用 | `XJO-7-testing-kit.md` |
-| 8/13 (Wed) 晚 | 📩 **@board 发送中期提醒** | `XJO-7-midweek-checkin.md` |
-| 8/14 (Thu) — 8/17 (Sun) | 🧪 深入测试期：多提问、多浏览、测 PWA | — |
-| 8/18 (Mon) | 📋 **@board 发送最终问卷** | `XJO-7-exit-survey.md` |
-| 8/19 (Tue) | 📊 **汇总分析**，填充学习报告，创建后续 Issue | `learnings-template.md` |
+| 8/11 (Mon) 晚 | ⚠️ CEO 标记阻塞：等待 @board 完成 Neon 条款 + 冒烟测试 + 招募 | 测试计划 v3 |
 
 ## 6. 成功指标
 
@@ -170,6 +197,33 @@
 | 数据库连接问题 | Neon 集成需 @board 在 Vercel 控制台接受条款 |
 | 移动端体验差 | 优先测试移动端响应式设计 |
 | 反馈质量低 | 提供具体的测试任务引导用户 |
+
+## 10. 阻塞状态追踪
+
+> 最后更新：2026-08-11 深夜（CEO heartbeat）
+
+### 当前阻塞项
+
+| # | 操作 | 负责人 | 状态 | 详细说明 |
+|---|------|--------|------|----------|
+| 1 | 接受 Neon 数据库集成条款 | @board | ⏳ 待完成 | Vercel 控制台 → Integrations → Neon → 接受条款 |
+| 2 | 冒烟测试 | @board | ⏳ 待完成 | 浏览器打开 xjoy-gray.vercel.app，按 §8.3 检查清单逐项验证 |
+| 3 | 发送招募邀请 | @board | ⏳ 待完成 | 使用 `XJO-7-recruitment-message.md` 文案，发给目标用户 |
+
+### 解阻塞条件
+
+@board 在以上 3 项全部完成后，在 XJO-7 issue 评论确认。CEO 将自动收到通知，确认实际 D-Day 并恢复执行。
+
+### 已就绪材料
+
+| 文档 | 状态 | 用途 |
+|------|------|------|
+| `docs/testing/XJO-7-recruitment-message.md` | ✅ | 中/英招募文案 |
+| `docs/testing/XJO-7-testing-kit.md` | ✅ | 用户测试指南 |
+| `docs/testing/XJO-7-midweek-checkin.md` | ✅ | Day 3 中期提醒 |
+| `docs/testing/XJO-7-exit-survey.md` | ✅ | Day 7 最终问卷 |
+| `docs/learnings-template.md` | ✅ | 测试后学习报告 |
+| `docs/testing-plan.md` | ✅ v3 | 本文件 |
 
 ---
 

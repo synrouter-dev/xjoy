@@ -15,16 +15,19 @@ export const viewport: Viewport = {
   ],
 };
 
+// GitHub Pages 子路径（如 /xjoy），自定义域名时为空
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 export const metadata: Metadata = {
   title: "Xjoy — AI 智慧圣经",
   description:
     "基于 AI 的 KJV 圣经应用——一个现代化、易用、智能的经文交互体验。",
   keywords: ["圣经", "KJV", "King James", "经文", "AI 圣经", "Xjoy"],
   icons: {
-    icon: "/favicon.png",
-    apple: "/apple-touch-icon.png",
+    icon: `${basePath}/favicon.png`,
+    apple: `${basePath}/apple-touch-icon.png`,
   },
-  manifest: "/manifest.json",
+  manifest: `${basePath}/manifest.json`,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

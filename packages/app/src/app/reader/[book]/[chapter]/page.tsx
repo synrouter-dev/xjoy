@@ -14,6 +14,27 @@ interface PageParams {
   chapter: string;
 }
 
+/**
+ * 为静态导出生成所有书卷+章节路径。
+ * 66 卷书 × 1,189 章 = 1,189 个页面。
+ * 仅在 output: "export" 模式下有效。
+ */
+export async function generateStaticParams(): Promise<PageParams[]> {
+  const books = getBooks();
+  const paths: PageParams[] = [];
+
+  for (const book of books) {
+    for (let ch = 1; ch <= book.chapters; ch++) {
+      paths.push({
+        book: encodeURIComponent(book.name),
+        chapter: String(ch),
+      });
+    }
+  }
+
+  return paths;
+}
+
 export async function generateMetadata({
   params,
 }: {

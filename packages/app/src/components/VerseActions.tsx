@@ -3,12 +3,20 @@
  *
  * Each verse in verse-by-verse mode shows a small action button that opens
  * a popover with: bookmark toggle, add note, copy verse, share.
+ *
+ * 静态部署兼容：通过 api.ts 适配层，API 不可用时自动回退到 localStorage。
  */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Bookmark } from "@/lib/bookmarks";
-import type { Note } from "@/lib/notes";
+import {
+  getBookmarks,
+  addBookmark,
+  removeBookmark,
+  getNotesForVerse,
+  createNote,
+} from "@/lib/api";
+import type { BookmarkItem, NoteItem } from "@/lib/api";
 
 interface VerseActionsProps {
   book: string;
@@ -20,11 +28,11 @@ interface VerseActionsProps {
 export function VerseActions({ book, chapter, verse, text }: VerseActionsProps) {
   const [open, setOpen] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-  const [bookmarkId, setBookmarkId] = useState<number | null>(null);
+  const [bookmarkId, setBookmarkId] = useState<number | string | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [copied, setCopied] = useState(false);
-  const [existingNotes, setExistingNotes] = useState<Note[]>([]);
+  const [existingNotes, setExistingNotes] = useState<NoteItem[]>([]);
 
   // Check bookmark status + existing notes when popover opens
   useEffect(() => {
@@ -34,11 +42,11 @@ export function VerseActions({ book, chapter, verse, text }: VerseActionsProps) 
     }
 
     // Fetch bookmark status
-    fetch(`/api/bookmarks?limit=200`)
-      .then((res) => res.json())
-      .then((data) => {
-        const match = data.bookmarks?.find(
-          (b: Bookmark) => b.book === book && b.chapter === chapter && b.verse === verse
+    getBookmarks()
+      .then((bookmarks) => {
+        const match = bookmarks.find(
+          (b: BookmarkItem) =>
+            b.book === book && b.chapter === chapter && b.verse === verse
         );
         if (match) {
           setBookmarked(true);
@@ -51,45 +59,39 @@ export function VerseActions({ book, chapter, verse, text }: VerseActionsProps) 
       .catch(() => {});
 
     // Fetch existing notes for this verse
-    fetch(`/api/notes?book=${encodeURIComponent(book)}&chapter=${chapter}&verse=${verse}`)
-      .then((res) => res.json())
-      .then((data) => setExistingNotes(data.notes ?? []))
+    getNotesForVerse(book, chapter, verse)
+      .then((notes) => setExistingNotes(notes))
       .catch(() => {});
   }, [open, book, chapter, verse]);
 
   const toggleBookmark = useCallback(async () => {
     if (bookmarked && bookmarkId) {
-      const res = await fetch(`/api/bookmarks?id=${bookmarkId}`, { method: "DELETE" });
-      if (res.ok) {
+      const ok = await removeBookmark(bookmarkId);
+      if (ok) {
         setBookmarked(false);
         setBookmarkId(null);
       }
     } else {
-      const res = await fetch("/api/bookmarks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ book, chapter, verse }),
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const result = await addBookmark({ book, chapter, verse });
+      if (result) {
         setBookmarked(true);
-        setBookmarkId(data.bookmark.id);
+        setBookmarkId(result.id);
       }
     }
   }, [bookmarked, bookmarkId, book, chapter, verse]);
 
   const saveNote = useCallback(async () => {
     if (!noteContent.trim()) return;
-    const res = await fetch("/api/notes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ book, chapter, verse, content: noteContent.trim() }),
+    const result = await createNote({
+      book,
+      chapter,
+      verse,
+      content: noteContent.trim(),
     });
-    if (res.ok) {
+    if (result) {
       // 刷新笔记列表，让用户立即看到刚保存的笔记
-      fetch(`/api/notes?book=${encodeURIComponent(book)}&chapter=${chapter}&verse=${verse}`)
-        .then((r) => r.json())
-        .then((data) => setExistingNotes(data.notes ?? []))
+      getNotesForVerse(book, chapter, verse)
+        .then((notes) => setExistingNotes(notes))
         .catch(() => {});
       setNoteContent("");
       setNoteOpen(false);
