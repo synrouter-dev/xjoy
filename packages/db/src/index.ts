@@ -56,6 +56,17 @@ export {
   type JigsawProgress,
 } from "./db";
 
+// ── 本地经文搜索（Neon 数据库回退方案）──
+
+export {
+  localSearchVerses,
+  localGetVerse,
+  localGetChapter,
+  localGetBooks,
+  isLocalSearchAvailable,
+  resetLocalIndex,
+} from "./local-search";
+
 // ── Study Scores ──
 
 export {

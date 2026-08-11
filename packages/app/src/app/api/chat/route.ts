@@ -118,28 +118,47 @@ export async function POST(request: Request) {
   const { query, conversationId } = chatRequest;
   const sanitizedQuery = sanitizeQuery(query);
 
+  // 跟踪数据库是否可用（用于优雅降级）
+  let dbAvailable = true;
+
   try {
-    // ── 1. Retrieve relevant verses ──
+    // ── 1. Retrieve relevant verses (DB with local fallback) ──
     const contextVerses = await retrieveVerses(sanitizedQuery);
+
+    // 检测是否使用了本地回退（检索成功但可能来自本地搜索）
+    const usingLocalFallback = contextVerses.length > 0 &&
+      contextVerses.every((v) => v.rank !== undefined);
 
     // ── 2. Load conversation history if continuing ──
     let history: { role: "user" | "assistant"; content: string }[] = [];
     let convId = conversationId;
 
     if (convId) {
-      const existingConv = await getConversation(convId);
-      if (!existingConv) {
-        return errorResponse("Conversation not found", 404);
+      try {
+        const existingConv = await getConversation(convId);
+        if (!existingConv) {
+          return errorResponse("Conversation not found", 404);
+        }
+        const messages = await getMessages(convId);
+        history = messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+      } catch (dbErr) {
+        console.warn("[chat] 数据库不可用，无法加载对话历史");
+        dbAvailable = false;
+        // 继续执行但不加载历史记录
       }
-      const messages = await getMessages(convId);
-      history = messages.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }));
-    } else {
-      // Create a new conversation
-      const conv = await createConversation(generateTitle(sanitizedQuery));
-      convId = conv.id;
+    } else if (!usingLocalFallback) {
+      try {
+        // Create a new conversation
+        const conv = await createConversation(generateTitle(sanitizedQuery));
+        convId = conv.id;
+      } catch (dbErr) {
+        console.warn("[chat] 数据库不可用，无法创建对话记录");
+        dbAvailable = false;
+        convId = undefined;
+      }
     }
 
     // ── 3. Build the prompt ──
@@ -150,8 +169,12 @@ export async function POST(request: Request) {
     );
 
     // ── 4. Save user message ──
-    if (convId) {
-      await addMessage(convId, "user", sanitizedQuery);
+    if (convId && dbAvailable) {
+      try {
+        await addMessage(convId, "user", sanitizedQuery);
+      } catch {
+        // 非关键——消息持久化失败不阻塞响应
+      }
     }
 
     // ── 5. Generate response ──
@@ -177,17 +200,20 @@ export async function POST(request: Request) {
     }
 
     // ── 7. Save assistant message ──
-    if (convId) {
-      await addMessage(convId, "assistant", answer, citations);
+    if (convId && dbAvailable) {
+      try {
+        await addMessage(convId, "assistant", answer, citations);
+      } catch {
+        // 非关键——消息持久化失败不阻塞响应
+      }
     }
 
     // ── 8. Update conversation title if this is the first exchange ──
-    if (convId && history.length === 0) {
+    if (convId && dbAvailable && history.length === 0) {
       try {
-        // Use the first query as a title
         await updateConversationTitle(convId, generateTitle(sanitizedQuery));
       } catch {
-        // Non-critical — title update can fail silently
+        // 非关键——标题更新失败不阻塞响应
       }
     }
 
@@ -200,8 +226,11 @@ export async function POST(request: Request) {
         verse: c.verse,
         text: c.text,
       })),
-      conversationId: convId,
+      conversationId: convId ?? null,
       contextVerseCount: contextVerses.length,
+      ...(usingLocalFallback
+        ? { dataSource: "local", note: "使用本地经文数据；对话历史未保存" }
+        : {}),
       ...(fabricationWarning?.detected
         ? { fabricationWarning: fabricationWarning.suspectPassages }
         : {}),
@@ -219,14 +248,13 @@ export async function POST(request: Request) {
         );
       }
 
-      // Database connection issues
+      // 经文数据完全不可用（数据库 + 本地都失败）
       if (
-        err.message.includes("DATABASE_URL") ||
-        err.message.includes("connect") ||
-        err.message.includes("ECONNREFUSED")
+        err.message.includes("经文检索不可用") ||
+        err.message.includes("data/kjv.json")
       ) {
         return errorResponse(
-          "Database is not available. Please ensure DATABASE_URL is set and the database is running.",
+          "经文数据不可用。请确认 Neon 数据库已连接，或 data/kjv.json 文件存在。",
           503
         );
       }

@@ -24,7 +24,12 @@ import {
   resolveBookName,
   isValidReference,
 } from "@xjoy/shared";
-import { searchVerses, searchVersesBroad } from "@xjoy/db";
+import {
+  searchVerses,
+  searchVersesBroad,
+  localSearchVerses,
+  isLocalSearchAvailable,
+} from "@xjoy/db";
 import type { Verse } from "@xjoy/shared";
 
 export const runtime = "nodejs";
@@ -147,15 +152,15 @@ export async function GET(request: NextRequest) {
   // ── Keyword search ──
   const searchQuery = request.nextUrl.searchParams.get("q");
   if (searchQuery && searchQuery.trim().length > 0) {
+    const query = searchQuery.trim();
+    if (query.length > 200) {
+      return errorResponse("搜索词过长，最多 200 个字符。", 400);
+    }
+    const limit = Math.min(
+      parseInt(request.nextUrl.searchParams.get("limit") || "20", 10),
+      50
+    );
     try {
-      const query = searchQuery.trim();
-      if (query.length > 200) {
-        return errorResponse("搜索词过长，最多 200 个字符。", 400);
-      }
-      const limit = Math.min(
-        parseInt(request.nextUrl.searchParams.get("limit") || "20", 10),
-        50
-      );
       // Try strict search first, fall back to broad
       let results = await searchVerses(query, limit);
       if (results.length < 3) {
@@ -171,9 +176,21 @@ export async function GET(request: NextRequest) {
         results = results.slice(0, limit);
       }
       return NextResponse.json({ results, count: results.length });
-    } catch (err) {
-      console.error("Search API error:", err);
-      return errorResponse("搜索失败，请稍后重试。", 500);
+    } catch (dbErr) {
+      // 数据库不可用 → 回退到本地搜索
+      console.warn(
+        "[verses] 数据库搜索失败，回退到本地搜索:",
+        dbErr instanceof Error ? dbErr.message : String(dbErr)
+      );
+      if (!isLocalSearchAvailable()) {
+        return errorResponse("搜索功能不可用：数据库未连接且本地数据文件缺失。", 503);
+      }
+      const results = localSearchVerses(query, limit);
+      return NextResponse.json({
+        results,
+        count: results.length,
+        dataSource: "local",
+      });
     }
   }
 

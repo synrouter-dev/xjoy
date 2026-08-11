@@ -12,7 +12,14 @@
  *   - Ground all answers in the provided context
  */
 
-import { searchVerses, searchVersesBroad, searchVersesByVector, type VerseSearchResult } from "@xjoy/db";
+import {
+  searchVerses,
+  searchVersesBroad,
+  searchVersesByVector,
+  localSearchVerses,
+  isLocalSearchAvailable,
+  type VerseSearchResult,
+} from "@xjoy/db";
 import OpenAI from "openai";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -193,50 +200,63 @@ export async function retrieveVerses(
   const results: VerseSearchResult[] = [];
   const seen = new Set<number>();
 
-  // ── 1. Vector search (semantic) ──
-  const embedding = await generateQueryEmbedding(query);
-  if (embedding) {
-    const vectorResults = await searchVersesByVector(embedding, limit);
-    for (const r of vectorResults) {
+  try {
+    // ── 1. Vector search (semantic) ──
+    const embedding = await generateQueryEmbedding(query);
+    if (embedding) {
+      const vectorResults = await searchVersesByVector(embedding, limit);
+      for (const r of vectorResults) {
+        if (!seen.has(r.id!)) {
+          seen.add(r.id!);
+          results.push(r);
+        }
+      }
+    }
+
+    // ── 2. Full-text search (keyword) ──
+    const ftsResults = await searchVerses(query, limit);
+
+    // Fallback: if too few FTS results, try broader matching
+    if (ftsResults.length < MIN_RESULTS) {
+      const broadResults = await searchVersesBroad(query, limit);
+      const ftsSeen = new Set(ftsResults.map((r) => r.id!));
+      for (const r of broadResults) {
+        if (!ftsSeen.has(r.id!)) {
+          ftsSeen.add(r.id!);
+          ftsResults.push(r);
+        }
+      }
+    }
+
+    // Merge FTS results (after vector results)
+    for (const r of ftsResults) {
       if (!seen.has(r.id!)) {
         seen.add(r.id!);
         results.push(r);
       }
     }
-  }
 
-  // ── 2. Full-text search (keyword) ──
-  const ftsResults = await searchVerses(query, limit);
+    // ── 3. Re-rank ──
+    results.sort((a, b) => b.rank - a.rank);
+    return results.slice(0, limit);
+  } catch (dbError) {
+    // ── 数据库不可用 → 回退到本地搜索 ──
+    console.warn(
+      "[rag] PostgreSQL 搜索失败，回退到本地搜索:",
+      dbError instanceof Error ? dbError.message : String(dbError)
+    );
 
-  // Fallback: if too few FTS results, try broader matching
-  if (ftsResults.length < MIN_RESULTS) {
-    const broadResults = await searchVersesBroad(query, limit);
-    const ftsSeen = new Set(ftsResults.map((r) => r.id!));
-    for (const r of broadResults) {
-      if (!ftsSeen.has(r.id!)) {
-        ftsSeen.add(r.id!);
-        ftsResults.push(r);
-      }
+    if (!isLocalSearchAvailable()) {
+      console.error("[rag] 本地搜索也不可用——无法检索经文");
+      throw new Error(
+        "经文检索不可用：数据库未连接且本地数据文件缺失。" +
+        "请确认 Neon 数据库已连接或 data/kjv.json 存在。"
+      );
     }
+
+    console.log("[rag] 使用本地内存搜索（data/kjv.json）");
+    return localSearchVerses(query, limit);
   }
-
-  // Merge FTS results (after vector results)
-  for (const r of ftsResults) {
-    if (!seen.has(r.id!)) {
-      seen.add(r.id!);
-      results.push(r);
-    }
-  }
-
-  // ── 3. Re-rank ──
-  // Sort by rank descending (higher is better).
-  // Vector results typically have rank 0.3-0.9 (cosine similarity)
-  // FTS results have rank from ts_rank (arbitrary scale)
-  // We keep them on separate scales but prioritize vector results
-  // by placing them first, then sort each group by rank.
-  results.sort((a, b) => b.rank - a.rank);
-
-  return results.slice(0, limit);
 }
 
 // ── Citation Extraction ───────────────────────────────────────────────────────
