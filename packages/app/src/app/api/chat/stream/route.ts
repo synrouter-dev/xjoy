@@ -238,6 +238,16 @@ export async function POST(request: Request) {
               message:
                 "Database is not available. Please ensure DATABASE_URL is set and the database is running.",
             });
+          } else if (
+            (err as { status?: unknown }).status === 401 ||
+            (err as { status?: unknown }).status === 403
+          ) {
+            // 上游 LLM 认证/鉴权失败（key 无效或过期）——与代码缺陷区分
+            enqueue({
+              type: "error",
+              message:
+                "AI 服务认证失败（上游 LLM 返回 401/403）。请确认 ANTHROPIC_API_KEY 有效。",
+            });
           } else {
             enqueue({
               type: "error",

@@ -94,6 +94,17 @@ function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
+/**
+ * The Anthropic SDK throws typed errors carrying a numeric `status`
+ * (401 AuthenticationError, 403 PermissionDeniedError, 429 RateLimitError).
+ * Proxy backends (e.g. DeepSeek) surface auth failures with messages that do
+ * NOT contain the literal "ANTHROPIC_API_KEY", so we must match on status.
+ */
+function upstreamStatus(err: unknown): number | undefined {
+  const status = (err as { status?: unknown })?.status;
+  return typeof status === "number" ? status : undefined;
+}
+
 // ── POST Handler ──────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
@@ -258,6 +269,15 @@ export async function POST(request: Request) {
           503
         );
       }
+    }
+
+    // 上游 LLM 认证/鉴权失败（key 无效或过期）——与代码缺陷区分，明确 502
+    const status = upstreamStatus(err);
+    if (status === 401 || status === 403) {
+      return errorResponse(
+        `AI 服务认证失败（上游 LLM 返回 ${status}）。请确认 ANTHROPIC_API_KEY 有效。`,
+        502
+      );
     }
 
     return errorResponse("An internal error occurred. Please try again.", 500);
